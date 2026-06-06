@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>שעון נוכחות — סופר תענוג</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0b0f1e;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── HEADER ─────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  background: linear-gradient(180deg, #111827 0%, transparent 100%);
+}
+
+.logo { font-size: 20px; font-weight: 700; color: #60a5fa; }
+
+.clock-wrap { text-align: center; }
+
+.clock {
+  font-size: clamp(38px, 6vw, 62px);
+  font-weight: 200;
+  letter-spacing: 4px;
+  font-variant-numeric: tabular-nums;
+  color: #f1f5f9;
+  line-height: 1;
+}
+
+.clock-date { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+/* ── GRID ───────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+  padding: 20px 28px 80px;
+  flex: 1;
+  align-content: start;
+}
+
+@media (max-width: 520px) {
+  .grid { grid-template-columns: repeat(2, 1fr); padding: 14px 14px 80px; gap: 10px; }
+  .header { padding: 14px 16px; }
+}
+
+/* ── EMPLOYEE CARD ──────────────────────── */
+.card {
+  background: #141928;
+  border: 2px solid #1e2a3a;
+  border-radius: 18px;
+  padding: 22px 14px 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, border-color .3s, background .3s;
+}
+
+.card:active { transform: scale(.95); }
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+}
+
+.card.inside { border-color: #16a34a; background: #0a1f0f; }
+
+.card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 auto 14px;
+  box-shadow: 0 4px 16px rgba(99,102,241,.3);
+  transition: background .3s, box-shadow .3s;
+}
+
+.card.inside .card-avatar {
+  background: linear-gradient(135deg, #16a34a, #10b981);
+  box-shadow: 0 4px 16px rgba(22,163,74,.4);
+}
+
+.card-name {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.card.inside .card-status { color: #4ade80; }
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #334155;
+  flex-shrink: 0;
+  transition: background .3s;
+}
+
+.card.inside .dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.2);
+  animation: blink 2.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity:1; }
+  50% { opacity:.3; }
+}
+
+.card-since { font-size: 12px; color: #22c55e; margin-top: 4px; opacity: .85; }
+
+/* ── MODAL ──────────────────────────────── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.78);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(6px);
+}
+
+.overlay.open { display: flex; }
+
+.modal {
+  background: #141928;
+  border: 1px solid #1e2a3a;
+  border-radius: 24px;
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0,0,0,.7);
+}
+
+.modal-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 700; color: #fff;
+  margin: 0 auto 18px;
+}
+
+.modal-name { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+.modal-sub  { font-size: 14px; color: #64748b; margin-bottom: 28px; }
+
+.modal-btns { display: flex; gap: 12px; }
+
+.btn {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+.btn:active { transform: scale(.97); }
+.btn-in  { background: #16a34a; color: #fff; }
+.btn-in:hover  { background: #15803d; }
+.btn-out { background: #dc2626; color: #fff; }
+.btn-out:hover { background: #b91c1c; }
+
+.btn-cancel {
+  display: block; width: 100%;
+  margin-top: 12px; padding: 12px;
+  background: transparent;
+  border: 1px solid #1e2a3a;
+  border-radius: 10px;
+  color: #64748b; font-size: 14px; cursor: pointer;
+  transition: background .15s;
+}
+
+.btn-cancel:hover { background: #1e2a3a; color: #e2e8f0; }
+
+/* ── PIN PAD ─────────────────────────────── */
+.pin-dots {
+  display: flex; justify-content: center; gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pin-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid #334155;
+  background: transparent;
+  transition: background .12s, border-color .12s;
+}
+
+.pin-dot.filled { background: #6366f1; border-color: #6366f1; }
+.pin-dot.error  { background: #dc2626 !important; border-color: #dc2626 !important; }
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.num-btn {
+  padding: 20px 0;
+  background: #1e2a3a;
+  border: none;
+  border-radius: 14px;
+  color: #e2e8f0;
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .1s, transform .08s;
+  font-family: inherit;
+  -webkit-user-select: none; user-select: none;
+}
+
+.num-btn:active { transform: scale(.91); background: #2d3f55; }
+.num-btn.del    { font-size: 20px; color: #94a3b8; }
+.num-btn.empty  { visibility: hidden; pointer-events: none; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-10px); }
+  40%     { transform: translateX(10px); }
+  60%     { transform: translateX(-7px); }
+  80%     { transform: translateX(7px); }
+}
+
+.pin-dots.shake { animation: shake .4s ease; }
+
+/* ── TOAST ──────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(90px);
+  padding: 14px 28px;
+  border-radius: 40px;
+  font-size: 16px; font-weight: 600;
+  z-index: 100;
+  transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.t-in    { background: #15803d; color: #fff; }
+.toast.t-out   { background: #b91c1c; color: #fff; }
+.toast.t-error { background: #92400e; color: #fff; }
+
+/* ── EMPTY ──────────────────────────────── */
+.empty {
+  grid-column: 1/-1;
+  text-align: center;
+  color: #334155;
+  padding: 80px 20px;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* ── ADMIN LINK ─────────────────────────── */
+.admin-link {
+  position: fixed; bottom: 14px; left: 14px;
+  color: rgba(255,255,255,.12);
+  font-size: 11px;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: color .2s, background .2s;
+}
+
+.admin-link:hover { color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">🏪 סופר תענוג</div>
+  <div class="clock-wrap">
+    <div class="clock" id="clock">00:00:00</div>
+    <div class="clock-date" id="clock-date"></div>
+  </div>
+  <div style="width:120px"></div>
+</div>
+
+<!-- EMPLOYEE GRID -->
+<div class="grid" id="grid">
+  <div class="empty">מתחבר לשרת...</div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-avatar" id="m-avatar"></div>
+    <div class="modal-name"   id="m-name"></div>
+    <div class="modal-sub"    id="m-sub"></div>
+
+    <!-- PIN SECTION -->
+    <div id="pin-section" style="display:none">
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="numpad">
+        <button class="num-btn" onclick="pinPress('1')">1</button>
+        <button class="num-btn" onclick="pinPress('2')">2</button>
+        <button class="num-btn" onclick="pinPress('3')">3</button>
+        <button class="num-btn" onclick="pinPress('4')">4</button>
+        <button class="num-btn" onclick="pinPress('5')">5</button>
+        <button class="num-btn" onclick="pinPress('6')">6</button>
+        <button class="num-btn" onclick="pinPress('7')">7</button>
+        <button class="num-btn" onclick="pinPress('8')">8</button>
+        <button class="num-btn" onclick="pinPress('9')">9</button>
+        <button class="num-btn empty"></button>
+        <button class="num-btn" onclick="pinPress('0')">0</button>
+        <button class="num-btn del" onclick="pinDelete()">⌫</button>
+      </div>
+    </div>
+
+    <!-- ACTION SECTION -->
+    <div id="action-section" style="display:none">
+      <div class="modal-btns">
+        <button class="btn btn-in"  id="m-btn-in"  onclick="record('in')">✅ כניסה</button>
+        <button class="btn btn-out" id="m-btn-out" onclick="record('out')">🚪 יציאה</button>
+      </div>
+    </div>
+
+    <button class="btn-cancel" onclick="closeModal()">ביטול</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ADMIN LINK (discreet) -->
+<a href="admin.html" class="admin-link">⚙ ניהול</a>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  הגדרות Firebase — מלא אחרי שתיצור פרויקט ב-Firebase        ║
+// ║  https://console.firebase.google.com → Add project           ║
+// ╚══════════════════════════════════════════════════════════════╝
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDXfz8yWDi6iNAn7GVluZOXpLzuJMibYuE",
+  authDomain:        "super-taanug-attendance.firebaseapp.com",
+  projectId:         "super-taanug-attendance",
+  storageBucket:     "super-taanug-attendance.firebasestorage.app",
+  messagingSenderId: "138632820419",
+  appId:             "1:138632820419:web:39148643e4b5e797029476"
+};
+// ════════════════════════════════════════════════════════════════
+
+// Detect unconfigured
+const isConfigured = !FIREBASE_CONFIG.apiKey.includes('PASTE');
+
+if (!isConfigured) {
+  document.getElementById('grid').innerHTML = `
+    <div class="empty">
+      ⚙️ Firebase לא מוגדר עדיין<br>
+      <span style="font-size:13px;margin-top:8px;display:block">
+        עקוב אחרי הוראות ה-SETUP.html
+      </span>
+    </div>`;
+} else {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const db = firebase.firestore();
+  initKiosk(db);
+}
+
+// ── CLOCK ────────────────────────────────────────────────────────
+const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+
+function tick() {
+  const n = new Date();
+  const h = String(n.getHours()).padStart(2,'0');
+  const m = String(n.getMinutes()).padStart(2,'0');
+  const s = String(n.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+  document.getElementById('clock-date').textContent =
+    `יום ${DAYS[n.getDay()]} · ${n.toLocaleDateString('he-IL')}`;
+}
+
+setInterval(tick, 1000);
+tick();
+
+// ── KIOSK LOGIC ──────────────────────────────────────────────────
+function initKiosk(db) {
+  let employees  = [];
+  let statusMap  = {};  // empId → { isInside, since }
+  let selected   = null;
+  let pinEntry   = '';
+
+  // ── Render cards ─────────────────────────────────────────────
+  function render() {
+    const grid = document.getElementById('grid');
+
+    if (!employees.length) {
+      grid.innerHTML = `<div class="empty">
+        לא נמצאו עובדים.<br>
+        <span style="font-size:13px">הוסף עובדים בלוח הניהול.</span>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = employees.map(emp => {
+      const s = statusMap[emp.id] || {};
+      const inside = !!s.isInside;
+      const sinceStr = inside && s.since ? `⏱ מאז ${fmtTime(s.since)}` : '';
+      return `
+        <div class="card${inside ? ' inside' : ''}"
+             onclick="openModal('${emp.id}','${esc(emp.name)}')">
+          <div class="card-avatar">${emp.name[0]}</div>
+          <div class="card-name">${emp.name}</div>
+          <div class="card-status">
+            <span class="dot"></span>
+            ${inside ? 'בפנים' : 'בחוץ'}
+          </div>
+          ${sinceStr ? `<div class="card-since">${sinceStr}</div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  // ── Firestore listeners ───────────────────────────────────────
+  db.collection('employees')
+    .where('active', '==', true)
+    .onSnapshot(snap => {
+      employees = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                          .sort((a,b) => a.name.localeCompare(b.name, 'he'));
+      render();
+    }, err => {
+      console.error(err);
+      document.getElementById('grid').innerHTML =
+        `<div class="empty">שגיאת חיבור.<br><span style="font-size:13px">${err.message}</span></div>`;
+    });
+
+  function todayStart() {
+    const d = new Date(); d.setHours(0,0,0,0);
+    return firebase.firestore.Timestamp.fromDate(d);
+  }
+
+  db.collection('attendance')
+    .where('timestamp', '>=', todayStart())
+    .orderBy('timestamp')
+    .onSnapshot(snap => {
+      statusMap = {};
+      snap.docs.forEach(doc => {
+        const { employeeId, type, timestamp } = doc.data();
+        statusMap[employeeId] = { isInside: type === 'in', since: timestamp };
+      });
+      render();
+    });
+
+  // ── Modal ─────────────────────────────────────────────────────
+  window.openModal = function(id, name) {
+    const emp = employees.find(e => e.id === id);
+    selected = { id, name, pin: emp?.pin || '' };
+    const s = statusMap[id] || {};
+    const inside = !!s.isInside;
+
+    const avatar = document.getElementById('m-avatar');
+    avatar.textContent = name[0];
+    avatar.style.background = inside
+      ? 'linear-gradient(135deg,#16a34a,#10b981)'
+      : 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+
+    document.getElementById('m-name').textContent = name;
+    document.getElementById('m-sub').textContent  = inside
+      ? `כרגע בפנים · מאז ${fmtTime(s.since)}`
+      : 'כרגע בחוץ';
+
+    document.getElementById('m-btn-in').style.display  = inside ? 'none' : 'flex';
+    document.getElementById('m-btn-out').style.display = inside ? 'flex' : 'none';
+
+    if (selected.pin) {
+      // Show PIN pad
+      pinEntry = '';
+      updatePinDots();
+      document.getElementById('pin-section').style.display    = '';
+      document.getElementById('action-section').style.display = 'none';
+    } else {
+      // No PIN — go straight to actions
+      document.getElementById('pin-section').style.display    = 'none';
+      document.getElementById('action-section').style.display = '';
+    }
+
+    document.getElementById('overlay').classList.add('open');
+  };
+
+  window.closeModal = function() {
+    document.getElementById('overlay').classList.remove('open');
+    selected = null;
+    pinEntry = '';
+  };
+
+  document.getElementById('overlay').addEventListener('click', e => {
+    if (e.target.id === 'overlay') closeModal();
+  });
+
+  // ── PIN logic ─────────────────────────────────────────────────
+  window.pinPress = function(digit) {
+    if (!selected || pinEntry.length >= 4) return;
+    pinEntry += digit;
+    updatePinDots();
+    if (pinEntry.length === 4) {
+      setTimeout(checkPin, 120);
+    }
+  };
+
+  window.pinDelete = function() {
+    if (pinEntry.length > 0) {
+      pinEntry = pinEntry.slice(0, -1);
+      updatePinDots();
+    }
+  };
+
+  function updatePinDots() {
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById('pd' + i);
+      dot.classList.toggle('filled', i < pinEntry.length);
+      dot.classList.remove('error');
+    }
+  }
+
+  function checkPin() {
+    if (pinEntry === String(selected.pin)) {
+      // Correct — show action buttons
+      document.getElementById('pin-section').style.display    = 'none';
+      document.getElementById('action-section').style.display = '';
+    } else {
+      // Wrong — shake and clear
+      const dots = document.getElementById('pin-dots');
+      for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.add('error');
+      dots.classList.add('shake');
+      setTimeout(() => {
+        dots.classList.remove('shake');
+        pinEntry = '';
+        updatePinDots();
+      }, 500);
+    }
+  }
+
+  // ── Record attendance ─────────────────────────────────────────
+  window.record = async function(type) {
+    if (!selected) return;
+    const { id, name } = selected;
+    closeModal();
+    try {
+      await db.collection('attendance').add({
+        employeeId:   id,
+        employeeName: name,
+        type,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        manual: false,
+        note: null
+      });
+      toast(
+        type === 'in' ? `✅ ${name} — כניסה נרשמה` : `🚪 ${name} — יציאה נרשמה`,
+        type === 'in' ? 't-in' : 't-out'
+      );
+    } catch(err) {
+      console.error(err);
+      toast('שגיאה בשמירה — בדוק חיבור', 't-error');
+    }
+  };
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, cls) {
+  clearTimeout(toastTimer);
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = `toast ${cls} show`;
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+function fmtTime(ts) {
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit', hour12:false });
+}
+
+function esc(s) { return (s||'').replace(/'/g,"\\'"); }
+</script>
+</body>
+</html>

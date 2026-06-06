@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול נוכחות — סופר תענוג</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #2563eb;
+  --primary-h: #1d4ed8;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* ── LOGIN ──────────────────────────────── */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b0f1e;
+}
+
+.login-box {
+  background: #141928;
+  border: 1px solid #1e2a3a;
+  border-radius: 20px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  color: #e2e8f0;
+}
+
+.login-icon  { font-size: 40px; margin-bottom: 8px; }
+.login-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.login-sub   { font-size: 14px; color: #64748b; margin-bottom: 32px; }
+
+.login-input {
+  width: 100%;
+  padding: 13px 16px;
+  background: #0b0f1e;
+  border: 1.5px solid #1e2a3a;
+  border-radius: 10px;
+  color: #e2e8f0;
+  font-size: 20px;
+  text-align: center;
+  letter-spacing: 6px;
+  margin-bottom: 14px;
+  outline: none;
+  transition: border-color .2s;
+  font-family: inherit;
+}
+
+.login-input:focus { border-color: #2563eb; }
+
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.login-btn:hover { background: #1d4ed8; }
+.login-err { color: #f87171; font-size: 14px; margin-top: 10px; min-height: 20px; }
+
+/* ── APP SHELL ──────────────────────────── */
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+
+.app-header {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky; top: 0; z-index: 20;
+  flex-shrink: 0;
+}
+
+.header-logo { font-size: 16px; font-weight: 700; color: var(--primary); }
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.live-badge {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── TABS ───────────────────────────────── */
+.tabs {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: 0 24px;
+  position: sticky; top: 60px; z-index: 19;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.tab {
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+
+.tab:hover { color: var(--primary); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+/* ── CONTENT ────────────────────────────── */
+.content {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── STATS CARDS ────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.stat-val { font-size: 30px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.stat-lbl { font-size: 13px; color: var(--muted); }
+
+/* ── TABLE CARD ─────────────────────────── */
+.tcard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.tcard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tcard-title { font-size: 15px; font-weight: 600; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+
+th {
+  background: #f8fafc;
+  padding: 10px 16px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafafa; }
+
+/* ── BADGES ─────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-in       { background: #dcfce7; color: #15803d; }
+.badge-out      { background: #fee2e2; color: #dc2626; }
+.badge-active   { background: #dbeafe; color: #1d4ed8; }
+.badge-inactive { background: #f1f5f9; color: #64748b; }
+.badge-manual   { background: #fef3c7; color: #92400e; }
+
+/* ── BUTTONS ────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s, transform .1s;
+  font-family: inherit;
+}
+
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-h); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #15803d; }
+.btn-danger  { background: var(--danger); color: #fff; }
+.btn-danger:hover  { background: #b91c1c; }
+.btn-ghost {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-sm  { padding: 5px 11px; font-size: 13px; }
+.btn-icon { padding: 6px 8px; font-size: 14px; border-radius: 7px; }
+
+/* ── FORM CONTROLS ──────────────────────── */
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.row label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+input[type="date"],
+input[type="datetime-local"],
+input[type="text"],
+input[type="password"],
+select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+  transition: border-color .15s;
+  font-family: inherit;
+}
+
+input:focus, select:focus { border-color: var(--primary); }
+
+/* ── LIVE PERSON ROW ────────────────────── */
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.person-row:last-child { border-bottom: none; }
+
+.person-av {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #16a34a, #10b981);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; color: #fff;
+  flex-shrink: 0;
+}
+
+.person-name  { font-weight: 600; font-size: 15px; }
+.person-since { font-size: 13px; color: var(--muted); margin-top: 1px; }
+.person-dur   { margin-right: auto; font-weight: 600; color: var(--primary); font-size: 15px; }
+
+/* ── EMPTY STATE ────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.empty-icon { font-size: 44px; margin-bottom: 12px; }
+
+/* ── MODAL ──────────────────────────────── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 50;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+.overlay.open { display: flex; }
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.2);
+}
+
+.modal h3 { font-size: 18px; margin-bottom: 20px; }
+
+.fg { margin-bottom: 15px; }
+.fg label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.fg input, .fg select { width: 100%; }
+
+.modal-acts { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+
+/* ── TOAST ──────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 14px; font-weight: 600;
+  z-index: 100;
+  transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+  white-space: nowrap;
+  pointer-events: none;
+  background: #1e293b; color: #fff;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 600px) {
+  .content { padding: 14px; }
+  .tabs { padding: 0 14px; }
+  .stats { grid-template-columns: repeat(2,1fr); }
+  .app-header { padding: 0 14px; }
+  .row { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     LOGIN
+════════════════════════════════════════ -->
+<div id="login-page" class="login-page">
+  <div class="login-box">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">ניהול נוכחות</div>
+    <div class="login-sub">סופר תענוג</div>
+    <input class="login-input" type="password" id="pwd"
+           placeholder="••••••"
+           onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">כניסה</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <header class="app-header">
+    <div class="header-logo">🏪 סופר תענוג · ניהול נוכחות</div>
+    <div class="header-right">
+      <div class="live-badge" id="live-badge">0 בפנים</div>
+      <a href="kiosk.html" target="_blank" style="text-decoration:none">
+        <button class="btn btn-ghost btn-sm">📺 קיוסק</button>
+      </a>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <div class="tab active" data-tab="live"      onclick="switchTab(this)">🟢 לוח חי</div>
+    <div class="tab"        data-tab="history"   onclick="switchTab(this)">📋 היסטוריה</div>
+    <div class="tab"        data-tab="employees" onclick="switchTab(this)">👥 עובדים</div>
+    <div class="tab"        data-tab="reports"   onclick="switchTab(this)">📊 דוחות</div>
+  </nav>
+
+  <div class="content" id="content"></div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     MODAL — EDIT / ADD RECORD
+════════════════════════════════════════ -->
+<div class="overlay" id="m-record">
+  <div class="modal">
+    <h3 id="m-record-title">הוספת רשומה ידנית</h3>
+    <div class="fg">
+      <label>עובד</label>
+      <select id="f-emp"></select>
+    </div>
+    <div class="fg">
+      <label>סוג</label>
+      <select id="f-type">
+        <option value="in">✅ כניסה</option>
+        <option value="out">🚪 יציאה</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>תאריך ושעה</label>
+      <input type="datetime-local" id="f-dt">
+    </div>
+    <div class="fg">
+      <label>הערה (אופציונלי)</label>
+      <input type="text" id="f-note" placeholder="לדוגמה: שכחו לצ׳ק-אאוט">
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModals()">ביטול</button>
+      <button class="btn btn-primary" onclick="saveRecord()">שמירה</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — ADD / EDIT EMPLOYEE -->
+<div class="overlay" id="m-emp">
+  <div class="modal">
+    <h3 id="m-emp-title">הוספת עובד</h3>
+    <div class="fg">
+      <label>שם מלא</label>
+      <input type="text" id="f-empname" placeholder="שם העובד">
+    </div>
+    <div class="fg">
+      <label>קוד PIN (4 ספרות, אופציונלי)</label>
+      <input type="text" id="f-emppin" placeholder="לדוגמה: 1234" maxlength="4"
+             pattern="[0-9]*" inputmode="numeric"
+             onkeydown="if(event.key==='Enter') saveEmployee()">
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModals()">ביטול</button>
+      <button class="btn btn-success" onclick="saveEmployee()">שמירה</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase + SheetJS -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  הגדרות — שנה כאן בלבד                                      ║
+// ╚══════════════════════════════════════════════════════════════╝
+const ADMIN_PASSWORD = "taanug2024";   // ← שנה את הסיסמה
+
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDXfz8yWDi6iNAn7GVluZOXpLzuJMibYuE",
+  authDomain:        "super-taanug-attendance.firebaseapp.com",
+  projectId:         "super-taanug-attendance",
+  storageBucket:     "super-taanug-attendance.firebasestorage.app",
+  messagingSenderId: "138632820419",
+  appId:             "1:138632820419:web:39148643e4b5e797029476"
+};
+// ════════════════════════════════════════════════════════════════
+
+// ── AUTH ─────────────────────────────────────────────────────
+function doLogin() {
+  const val = document.getElementById('pwd').value;
+  if (val === ADMIN_PASSWORD) {
+    sessionStorage.setItem('auth','1');
+    showApp();
+  } else {
+    document.getElementById('login-err').textContent = 'סיסמה שגויה';
+    document.getElementById('pwd').value = '';
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('auth');
+  location.reload();
+}
+
+function showApp() {
+  document.getElementById('login-page').remove();
+  document.getElementById('app').style.display = '';
+  initApp();
+}
+
+if (sessionStorage.getItem('auth') === '1') showApp();
+
+// ── FIREBASE ─────────────────────────────────────────────────
+let db;
+
+function initApp() {
+  const isConfigured = !FIREBASE_CONFIG.apiKey.includes('PASTE');
+  if (!isConfigured) {
+    document.getElementById('content').innerHTML = `
+      <div style="max-width:520px;margin:60px auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:32px;text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">⚙️</div>
+        <h2 style="margin-bottom:12px">Firebase לא מוגדר</h2>
+        <p style="color:#64748b;line-height:1.7;margin-bottom:20px">
+          פתח את הקבצים <strong>kiosk.html</strong> ו-<strong>admin.html</strong>
+          בעורך טקסט ומלא את פרטי Firebase שלך
+          (PASTE_YOUR_API_KEY וכו׳).<br><br>
+          הוראות הגדרה: <a href="SETUP.html" style="color:#2563eb">SETUP.html</a>
+        </p>
+      </div>`;
+    return;
+  }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+  setupListeners();
+  switchTabByName('live');
+}
+
+// ── STATE ─────────────────────────────────────────────────────
+let employees = [];
+let statusMap = {};
+let todayRecords = [];
+
+function setupListeners() {
+  db.collection('employees').onSnapshot(snap => {
+    employees = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                         .sort((a,b) => a.name.localeCompare(b.name, 'he'));
+    refreshTab();
+  });
+
+  db.collection('attendance')
+    .where('timestamp', '>=', todayStart())
+    .orderBy('timestamp')
+    .onSnapshot(snap => {
+      todayRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      statusMap = {};
+      todayRecords.forEach(r => {
+        statusMap[r.employeeId] = { isInside: r.type === 'in', since: r.timestamp };
+      });
+      updateLiveBadge();
+      refreshTab();
+    });
+}
+
+function todayStart() {
+  const d = new Date(); d.setHours(0,0,0,0);
+  return firebase.firestore.Timestamp.fromDate(d);
+}
+
+function updateLiveBadge() {
+  const n = Object.values(statusMap).filter(s => s.isInside).length;
+  document.getElementById('live-badge').textContent = `${n} בפנים כעת`;
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+let currentTab = 'live';
+
+function switchTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = el.dataset.tab;
+  refreshTab();
+}
+
+function switchTabByName(name) {
+  const el = document.querySelector(`.tab[data-tab="${name}"]`);
+  if (el) switchTab(el);
+}
+
+function refreshTab() {
+  if (currentTab === 'live')      renderLive();
+  if (currentTab === 'history')   renderHistory();
+  if (currentTab === 'employees') renderEmployees();
+  if (currentTab === 'reports')   renderReports();
+}
+
+// ════════════════════════════════════════
+// TAB 1 — LIVE
+// ════════════════════════════════════════
+clearInterval(window._durTimer);
+
+function renderLive() {
+  const inside  = employees.filter(e => e.active !== false && statusMap[e.id]?.isInside);
+  const outside = employees.filter(e => e.active !== false && !statusMap[e.id]?.isInside).length;
+  const entries = todayRecords.filter(r => r.type === 'in').length;
+  const active  = employees.filter(e => e.active !== false).length;
+
+  document.getElementById('content').innerHTML = `
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val" style="color:#16a34a">${inside.length}</div>
+        <div class="stat-lbl">בפנים עכשיו</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">${outside}</div>
+        <div class="stat-lbl">בחוץ</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" style="color:var(--primary)">${entries}</div>
+        <div class="stat-lbl">כניסות היום</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">${active}</div>
+        <div class="stat-lbl">עובדים פעילים</div>
+      </div>
+    </div>
+
+    <div class="tcard">
+      <div class="tcard-head">
+        <div class="tcard-title">🟢 עובדים בפנים עכשיו</div>
+        <span style="font-size:13px;color:var(--muted)">עדכון בזמן אמת</span>
+      </div>
+      ${inside.length === 0
+        ? `<div class="empty"><div class="empty-icon">🏠</div>אין עובדים בפנים כרגע</div>`
+        : `<div id="inside-list">${insideRows(inside)}</div>`
+      }
+    </div>
+
+    ${todayRecords.length > 0 ? `
+    <div class="tcard">
+      <div class="tcard-head">
+        <div class="tcard-title">📋 פעילות היום</div>
+      </div>
+      <table>
+        <thead><tr><th>שעה</th><th>עובד</th><th>סוג</th><th>הערה</th></tr></thead>
+        <tbody>
+          ${[...todayRecords].reverse().map(r => `
+            <tr>
+              <td style="font-variant-numeric:tabular-nums;white-space:nowrap">${fmtTime(r.timestamp)}</td>
+              <td><strong>${r.employeeName}</strong></td>
+              <td><span class="badge badge-${r.type}">${r.type==='in'?'✅ כניסה':'🚪 יציאה'}</span>
+                  ${r.manual?'<span class="badge badge-manual" style="margin-right:4px">ידני</span>':''}</td>
+              <td style="font-size:13px;color:var(--muted)">${r.note||''}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : ''}
+  `;
+
+  // Update durations every minute
+  if (inside.length > 0) {
+    window._durTimer = setInterval(() => {
+      const el = document.getElementById('inside-list');
+      if (el && currentTab === 'live') el.innerHTML = insideRows(inside);
+    }, 60000);
+  }
+}
+
+function insideRows(list) {
+  return list.map(emp => {
+    const s = statusMap[emp.id];
+    const since = s.since?.toDate ? s.since.toDate() : new Date();
+    return `
+      <div class="person-row">
+        <div class="person-av">${emp.name[0]}</div>
+        <div>
+          <div class="person-name">${emp.name}</div>
+          <div class="person-since">נכנס ב-${fmtTime(s.since)}</div>
+        </div>
+        <div class="person-dur">${durStr(since)}</div>
+        <button class="btn btn-ghost btn-sm"
+                onclick="forceOut('${emp.id}','${esc(emp.name)}')">יציאה ידנית</button>
+      </div>`;
+  }).join('');
+}
+
+function durStr(since) {
+  const mins = Math.floor((Date.now() - since.getTime()) / 60000);
+  if (mins < 60) return `${mins} דק׳`;
+  return `${Math.floor(mins/60)}:${String(mins%60).padStart(2,'0')} שע׳`;
+}
+
+async function forceOut(id, name) {
+  if (!confirm(`לרשום יציאה ל-${name}?`)) return;
+  await db.collection('attendance').add({
+    employeeId: id, employeeName: name, type: 'out',
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    manual: true, note: 'יציאה ידנית ע"י מנהל'
+  });
+  toast('יציאה נרשמה ✓');
+}
+
+// ════════════════════════════════════════
+// TAB 2 — HISTORY
+// ════════════════════════════════════════
+let hFilter = { from: dateStr(new Date()), to: dateStr(new Date()), empId: '' };
+let hRecords = [];
+let hUnsub = null;
+let editingRecordId = null;
+
+function renderHistory() {
+  document.getElementById('content').innerHTML = `
+    <div class="row">
+      <label>מ:</label>
+      <input type="date" id="h-from" value="${hFilter.from}"
+             onchange="hFilter.from=this.value;loadHistory()">
+      <label>עד:</label>
+      <input type="date" id="h-to" value="${hFilter.to}"
+             onchange="hFilter.to=this.value;loadHistory()">
+      <label>עובד:</label>
+      <select id="h-emp" onchange="hFilter.empId=this.value;loadHistory()">
+        <option value="">כולם</option>
+        ${employees.map(e => `<option value="${e.id}" ${hFilter.empId===e.id?'selected':''}>${e.name}</option>`).join('')}
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="openAddRecord()" style="margin-right:auto">
+        + הוספה ידנית
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="exportHistory()">📥 Excel</button>
+    </div>
+    <div id="h-table" class="tcard">
+      <div class="empty">טוען...</div>
+    </div>`;
+
+  loadHistory();
+}
+
+function loadHistory() {
+  if (hUnsub) { hUnsub(); hUnsub = null; }
+
+  const from = new Date(hFilter.from + 'T00:00:00');
+  const to   = new Date(hFilter.to   + 'T23:59:59');
+
+  hUnsub = db.collection('attendance')
+    .where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(from))
+    .where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(to))
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(snap => {
+      hRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (hFilter.empId) hRecords = hRecords.filter(r => r.employeeId === hFilter.empId);
+      renderHistoryTable();
+    });
+}
+
+function renderHistoryTable() {
+  const wrap = document.getElementById('h-table');
+  if (!wrap) return;
+
+  if (!hRecords.length) {
+    wrap.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>אין רשומות בתקופה זו</div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>תאריך ושעה</th><th>עובד</th><th>סוג</th><th>הערה</th><th>פעולות</th>
+      </tr></thead>
+      <tbody>
+        ${hRecords.map(r => `
+          <tr>
+            <td style="font-variant-numeric:tabular-nums;white-space:nowrap">${fmtDateTime(r.timestamp)}</td>
+            <td><strong>${r.employeeName}</strong></td>
+            <td>
+              <span class="badge badge-${r.type}">${r.type==='in'?'✅ כניסה':'🚪 יציאה'}</span>
+              ${r.manual?'<span class="badge badge-manual" style="margin-right:4px">ידני</span>':''}
+            </td>
+            <td style="font-size:13px;color:var(--muted)">${r.note||''}</td>
+            <td style="white-space:nowrap">
+              <button class="btn btn-ghost btn-icon btn-sm" title="עריכה"
+                      onclick="openEditRecord('${r.id}')">✏️</button>
+              <button class="btn btn-ghost btn-icon btn-sm" title="מחיקה"
+                      onclick="deleteRecord('${r.id}','${esc(r.employeeName)}','${r.type}')">🗑️</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function exportHistory() {
+  if (!hRecords.length) { toast('אין נתונים לייצוא'); return; }
+  const rows = [['תאריך','שעה','עובד','סוג','הערה','ידני']];
+  hRecords.forEach(r => {
+    const d = r.timestamp?.toDate ? r.timestamp.toDate() : new Date(r.timestamp);
+    rows.push([
+      d.toLocaleDateString('he-IL'),
+      d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false}),
+      r.employeeName,
+      r.type === 'in' ? 'כניסה' : 'יציאה',
+      r.note || '',
+      r.manual ? 'כן' : ''
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:12},{wch:8},{wch:16},{wch:8},{wch:22},{wch:6}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'נוכחות');
+  XLSX.writeFile(wb, `נוכחות_${hFilter.from}_${hFilter.to}.xlsx`);
+}
+
+function openAddRecord() {
+  editingRecordId = null;
+  document.getElementById('m-record-title').textContent = 'הוספת רשומה ידנית';
+  fillEmpSelect('');
+  document.getElementById('f-type').value = 'in';
+  document.getElementById('f-dt').value   = localDT(new Date());
+  document.getElementById('f-note').value = '';
+  document.getElementById('m-record').classList.add('open');
+}
+
+function openEditRecord(id) {
+  const r = hRecords.find(x => x.id === id);
+  if (!r) return;
+  editingRecordId = id;
+  document.getElementById('m-record-title').textContent = 'עריכת רשומה';
+  fillEmpSelect(r.employeeId);
+  document.getElementById('f-type').value = r.type;
+  const d = r.timestamp?.toDate ? r.timestamp.toDate() : new Date();
+  document.getElementById('f-dt').value   = localDT(d);
+  document.getElementById('f-note').value = r.note || '';
+  document.getElementById('m-record').classList.add('open');
+}
+
+function fillEmpSelect(selId) {
+  document.getElementById('f-emp').innerHTML =
+    employees.filter(e => e.active !== false).map(e =>
+      `<option value="${e.id}" data-name="${esc(e.name)}" ${e.id===selId?'selected':''}>${e.name}</option>`
+    ).join('');
+}
+
+async function saveRecord() {
+  const empEl  = document.getElementById('f-emp');
+  const empId  = empEl.value;
+  const empName = empEl.options[empEl.selectedIndex]?.getAttribute('data-name') || '';
+  const type   = document.getElementById('f-type').value;
+  const dtVal  = document.getElementById('f-dt').value;
+  const note   = document.getElementById('f-note').value.trim();
+
+  if (!empId || !dtVal) { alert('נא למלא את כל השדות'); return; }
+
+  const ts = firebase.firestore.Timestamp.fromDate(new Date(dtVal));
+  const data = {
+    employeeId: empId, employeeName: empName,
+    type, timestamp: ts, manual: true,
+    note: note || null
+  };
+
+  try {
+    if (editingRecordId) {
+      await db.collection('attendance').doc(editingRecordId).update(data);
+      toast('רשומה עודכנה ✓');
+    } else {
+      await db.collection('attendance').add(data);
+      toast('רשומה נוספה ✓');
+    }
+    closeModals();
+  } catch(e) { alert('שגיאה: ' + e.message); }
+}
+
+async function deleteRecord(id, name, type) {
+  const label = type==='in' ? 'כניסה' : 'יציאה';
+  if (!confirm(`למחוק רשומת ${label} של ${name}?`)) return;
+  await db.collection('attendance').doc(id).delete();
+  toast('נמחק ✓');
+}
+
+// ════════════════════════════════════════
+// TAB 3 — EMPLOYEES
+// ════════════════════════════════════════
+let editingEmpId = null;
+
+function renderEmployees() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:18px;font-weight:700">ניהול עובדים</h2>
+      <button class="btn btn-success" onclick="openAddEmp()">+ הוספת עובד</button>
+    </div>
+    <div class="tcard">
+      <table>
+        <thead><tr>
+          <th>עובד</th><th>PIN</th><th>סטטוס</th><th>מצב היום</th><th>פעולות</th>
+        </tr></thead>
+        <tbody>
+          ${employees.map(emp => {
+            const active = emp.active !== false;
+            const s = statusMap[emp.id];
+            const todayStatus = active
+              ? (s?.isInside
+                  ? '<span style="color:#16a34a;font-weight:600">✅ בפנים</span>'
+                  : '<span style="color:var(--muted)">בחוץ</span>')
+              : '—';
+            return `
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;font-size:15px">${emp.name[0]}</div>
+                    <strong>${emp.name}</strong>
+                  </div>
+                </td>
+                <td style="font-variant-numeric:tabular-nums;letter-spacing:2px;color:var(--muted)">${emp.pin ? '••••' : '<span style="color:#cbd5e1">—</span>'}</td>
+                <td><span class="badge ${active?'badge-active':'badge-inactive'}">${active?'פעיל':'מושבת'}</span></td>
+                <td>${todayStatus}</td>
+                <td style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-ghost btn-sm"
+                          onclick="openEditEmp('${emp.id}','${esc(emp.name)}')">✏️ שם</button>
+                  <button class="btn btn-ghost btn-sm"
+                          onclick="toggleEmp('${emp.id}',${active})">${active?'השבת':'הפעל'}</button>
+                  <button class="btn btn-ghost btn-sm" style="color:var(--danger)"
+                          onclick="deleteEmp('${emp.id}','${esc(emp.name)}')">🗑️</button>
+                </td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function openAddEmp() {
+  editingEmpId = null;
+  document.getElementById('m-emp-title').textContent = 'הוספת עובד';
+  document.getElementById('f-empname').value = '';
+  document.getElementById('f-emppin').value  = '';
+  document.getElementById('m-emp').classList.add('open');
+  setTimeout(() => document.getElementById('f-empname').focus(), 80);
+}
+
+function openEditEmp(id, name) {
+  editingEmpId = id;
+  const emp = employees.find(e => e.id === id);
+  document.getElementById('m-emp-title').textContent = 'עריכת עובד';
+  document.getElementById('f-empname').value = name;
+  document.getElementById('f-emppin').value  = emp?.pin || '';
+  document.getElementById('m-emp').classList.add('open');
+  setTimeout(() => document.getElementById('f-empname').focus(), 80);
+}
+
+async function saveEmployee() {
+  const name = document.getElementById('f-empname').value.trim();
+  const pinRaw = document.getElementById('f-emppin').value.trim();
+  if (!name) { alert('נא להזין שם'); return; }
+  if (pinRaw && (!/^\d{4}$/.test(pinRaw))) { alert('PIN חייב להיות 4 ספרות בדיוק'); return; }
+  const pin = pinRaw || '';
+  try {
+    if (editingEmpId) {
+      await db.collection('employees').doc(editingEmpId).update({ name, pin });
+      toast('עובד עודכן ✓');
+    } else {
+      await db.collection('employees').add({
+        name, pin, active: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      toast('עובד נוסף ✓');
+    }
+    closeModals();
+  } catch(e) { alert('שגיאה: ' + e.message); }
+}
+
+async function toggleEmp(id, active) {
+  await db.collection('employees').doc(id).update({ active: !active });
+  toast(!active ? 'עובד הופעל ✓' : 'עובד הושבת ✓');
+}
+
+async function deleteEmp(id, name) {
+  if (!confirm(`למחוק את ${name}?\nהרשומות ההיסטוריות יישמרו.`)) return;
+  await db.collection('employees').doc(id).delete();
+  toast('עובד נמחק ✓');
+}
+
+// ════════════════════════════════════════
+// TAB 4 — REPORTS
+// ════════════════════════════════════════
+let rPeriod = 'week';
+let rFrom = dateStr(new Date());
+let rTo   = dateStr(new Date());
+let rData = [];
+
+function renderReports() {
+  document.getElementById('content').innerHTML = `
+    <div class="row" style="margin-bottom:20px">
+      <label>תקופה:</label>
+      <select id="r-period" onchange="rPeriod=this.value;toggleCustomRange();loadReport()">
+        <option value="week"       ${rPeriod==='week'      ?'selected':''}>שבוע נוכחי</option>
+        <option value="month"      ${rPeriod==='month'     ?'selected':''}>חודש נוכחי</option>
+        <option value="last-month" ${rPeriod==='last-month'?'selected':''}>חודש קודם</option>
+        <option value="custom"     ${rPeriod==='custom'    ?'selected':''}>טווח מותאם</option>
+      </select>
+      <span id="custom-range" style="display:${rPeriod==='custom'?'flex':'none'};align-items:center;gap:8px">
+        <label>מ:</label>
+        <input type="date" id="r-from" value="${rFrom}" onchange="rFrom=this.value;loadReport()">
+        <label>עד:</label>
+        <input type="date" id="r-to"   value="${rTo}"   onchange="rTo=this.value;loadReport()">
+      </span>
+      <button class="btn btn-primary btn-sm" style="margin-right:auto" onclick="exportReport()">
+        📥 ייצוא Excel
+      </button>
+    </div>
+    <div id="report-out">
+      <div class="empty">טוען...</div>
+    </div>`;
+
+  loadReport();
+}
+
+function toggleCustomRange() {
+  const el = document.getElementById('custom-range');
+  if (el) el.style.display = rPeriod === 'custom' ? 'flex' : 'none';
+}
+
+async function loadReport() {
+  const { from, to } = reportRange();
+  const snap = await db.collection('attendance')
+    .where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(from))
+    .where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(to))
+    .orderBy('timestamp')
+    .get();
+
+  const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  rData = records;
+
+  // Group by employee → compute sessions
+  const byEmp = {};
+  records.forEach(r => {
+    (byEmp[r.employeeId] = byEmp[r.employeeId] || { name: r.employeeName, recs: [] }).recs.push(r);
+  });
+
+  const rows = employees.filter(e => e.active !== false).map(emp => {
+    const g = byEmp[emp.id];
+    if (!g) return { name: emp.name, totalMins: 0, days: 0, entries: 0, sessions: [] };
+
+    let totalMins = 0, pendingIn = null;
+    const sessions = [];
+    const daySet = new Set();
+
+    g.recs.forEach(r => {
+      if (r.type === 'in') {
+        pendingIn = r.timestamp?.toDate ? r.timestamp.toDate() : new Date(r.timestamp);
+        daySet.add(dateStr(pendingIn));
+      } else if (r.type === 'out' && pendingIn) {
+        const out = r.timestamp?.toDate ? r.timestamp.toDate() : new Date(r.timestamp);
+        const mins = (out - pendingIn) / 60000;
+        totalMins += mins;
+        sessions.push(mins);
+        pendingIn = null;
+      }
+    });
+
+    const entries = g.recs.filter(r => r.type === 'in').length;
+    return { name: emp.name, totalMins, days: daySet.size, entries, sessions };
+  });
+
+  const total = rows.reduce((a,b) => a + b.totalMins, 0);
+  const { from: f, to: t } = reportRange();
+
+  const out = document.getElementById('report-out');
+  if (!out) return;
+
+  out.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <span style="font-size:14px;color:var(--muted)">
+        ${f.toLocaleDateString('he-IL')} — ${t.toLocaleDateString('he-IL')}
+      </span>
+      <span style="font-size:14px;font-weight:600">סה"כ: ${minsToH(total)} שעות</span>
+    </div>
+    <div class="tcard">
+      <table id="report-table">
+        <thead><tr>
+          <th>עובד</th>
+          <th>שעות עבודה</th>
+          <th>ימי נוכחות</th>
+          <th>ממוצע יומי</th>
+          <th>כניסות</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td><strong>${r.name}</strong></td>
+              <td style="font-variant-numeric:tabular-nums">${r.totalMins>0 ? minsToH(r.totalMins)+' ש׳' : '—'}</td>
+              <td>${r.days || '—'}</td>
+              <td>${r.days>0 ? minsToH(r.totalMins/r.days)+' ש׳' : '—'}</td>
+              <td>${r.entries || '—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function exportReport() {
+  const tbl = document.getElementById('report-table');
+  if (!tbl) { toast('טוען...'); return; }
+  const ws = XLSX.utils.table_to_sheet(tbl);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'דוח שעות');
+  const { from, to } = reportRange();
+  XLSX.writeFile(wb, `דוח_שעות_${dateStr(from)}_${dateStr(to)}.xlsx`);
+}
+
+function reportRange() {
+  const now = new Date();
+  let from, to;
+  if (rPeriod === 'week') {
+    from = new Date(now); from.setDate(now.getDate() - now.getDay()); from.setHours(0,0,0,0);
+    to   = new Date(from); to.setDate(from.getDate()+6); to.setHours(23,59,59,999);
+  } else if (rPeriod === 'month') {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+    to   = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999);
+  } else if (rPeriod === 'last-month') {
+    from = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    to   = new Date(now.getFullYear(), now.getMonth(), 0, 23,59,59,999);
+  } else {
+    from = new Date(rFrom + 'T00:00:00');
+    to   = new Date(rTo   + 'T23:59:59');
+  }
+  return { from, to };
+}
+
+// ── MODALS ───────────────────────────────────────────────────
+function closeModals() {
+  document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open'));
+  editingRecordId = null;
+  editingEmpId = null;
+}
+
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) closeModals(); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModals();
+});
+
+// ── TOAST ────────────────────────────────────────────────────
+let _tt;
+function toast(msg) {
+  clearTimeout(_tt);
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  _tt = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function fmtTime(ts) {
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit', hour12:false });
+}
+
+function fmtDateTime(ts) {
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('he-IL') + ' ' +
+    d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit', hour12:false });
+}
+
+function dateStr(d) { return d.toISOString().slice(0,10); }
+
+function localDT(d) {
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function minsToH(m) {
+  return `${Math.floor(m/60)}:${String(Math.round(m%60)).padStart(2,'0')}`;
+}
+
+function esc(s) { return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>

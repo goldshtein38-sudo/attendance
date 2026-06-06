@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הגדרת שעון נוכחות</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #0f172a; }
+.page { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 26px; margin-bottom: 6px; }
+.sub { color: #64748b; font-size: 15px; margin-bottom: 40px; }
+.step { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #2563eb; color: #fff; border-radius: 50%; font-weight: 700; font-size: 15px; margin-bottom: 14px; }
+h2 { font-size: 18px; margin-bottom: 10px; }
+p  { color: #475569; line-height: 1.75; margin-bottom: 10px; }
+code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 14px; font-family: monospace; color: #be185d; }
+pre { background: #0f172a; color: #e2e8f0; padding: 16px; border-radius: 10px; font-size: 13px; line-height: 1.7; overflow-x: auto; margin: 12px 0; }
+a { color: #2563eb; }
+.note { background: #fef3c7; border: 1px solid #fde68a; border-radius: 10px; padding: 14px 18px; font-size: 14px; color: #92400e; margin-top: 14px; }
+.done-btn { display: inline-block; margin-top: 30px; padding: 14px 28px; background: #16a34a; color: #fff; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 16px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>🏪 הגדרת שעון נוכחות</h1>
+  <div class="sub">3 שלבים פשוטים — ~10 דקות</div>
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="step-num">1</div>
+    <h2>יצירת פרויקט Firebase (חינמי)</h2>
+    <p>
+      Firebase הוא שירות חינמי של גוגל שמאחסן את נתוני הנוכחות בענן
+      כך שגם הטאבלט וגם הנייד רואים אותו דבר בזמן אמת.
+    </p>
+    <p>
+      1. פתח <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> וכנס עם חשבון Google שלך.<br>
+      2. לחץ <strong>Add project</strong> → שם: <code>super-taanug-attendance</code><br>
+      3. Google Analytics — <strong>לא חובה</strong>, אפשר לכבות ולהמשיך.<br>
+      4. המתן שהפרויקט ייווצר ולחץ <strong>Continue</strong>.
+    </p>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="step-num">2</div>
+    <h2>קבלת פרטי ה-Firebase Config</h2>
+    <p>
+      1. בדף הפרויקט לחץ על אייקון <strong>&lt;/&gt;</strong> (Web app).<br>
+      2. שם האפליקציה: <code>attendance</code> → <strong>Register app</strong>.<br>
+      3. תקבל בלוק קוד כזה:
+    </p>
+    <pre>const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "super-taanug-attendance.firebaseapp.com",
+  projectId: "super-taanug-attendance",
+  storageBucket: "super-taanug-attendance.appspot.com",
+  messagingSenderId: "12345678",
+  appId: "1:12345678:web:abcdef"
+};</pre>
+    <p>
+      4. העתק את הערכים האלה.<br>
+      5. פתח את <code>kiosk.html</code> ואת <code>admin.html</code> בפנקס רשימות (Notepad++, VSCode וכו׳).<br>
+      6. מצא את הקטע:
+    </p>
+    <pre>const FIREBASE_CONFIG = {
+  apiKey:            "PASTE_YOUR_API_KEY",
+  ...</pre>
+    <p>7. החלף כל ערך <code>PASTE_YOUR_...</code> בערך האמיתי שלך. עשה זאת ב<strong>שני הקבצים</strong>.</p>
+    <div class="note">⚠️ חשוב: הפרטים זהים בשני הקבצים — כפול-הדבק לשניהם.</div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="step-num">3</div>
+    <h2>פתיחת Firestore Database</h2>
+    <p>
+      Firebase צריך להפעיל את מסד הנתונים:
+    </p>
+    <p>
+      1. בצד שמאל בפרויקט Firebase: <strong>Firestore Database</strong> → <strong>Create database</strong>.<br>
+      2. בחר <strong>Start in test mode</strong> → Next.<br>
+      3. בחר את האזור הקרוב (<code>europe-west3</code> — פרנקפורט) → <strong>Enable</strong>.
+    </p>
+    <div class="note">
+      ⚠️ Test mode מאפשר גישה חינמית ל-30 יום. אחרי 30 יום צריך להוסיף חוקי אבטחה פשוטים
+      (או פשוט לבחור test mode שוב — לעסק פנימי זה מספיק).
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step">
+    <div class="step-num">4</div>
+    <h2>שינוי הסיסמה (מומלץ)</h2>
+    <p>
+      ב-<code>admin.html</code> מצא:
+    </p>
+    <pre>const ADMIN_PASSWORD = "taanug2024";</pre>
+    <p>שנה ל-סיסמה שלך ושמור.</p>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step">
+    <div class="step-num">5</div>
+    <h2>העלאה לאינטרנט (ב-Cloudflare Pages)</h2>
+    <p>
+      מכיוון שכבר יש לך אתר ב-Cloudflare Pages, פשוט:
+    </p>
+    <p>
+      1. צור תיקייה חדשה בגיט-האב שלך (או הוסף לאותו ריפו, בתיקייה <code>attendance/</code>).<br>
+      2. העלה את <code>kiosk.html</code> ו-<code>admin.html</code>.<br>
+      3. Cloudflare יבנה אוטומטית.
+    </p>
+    <p>או — לשימוש מקומי בלבד — פשוט פתח את <code>kiosk.html</code> ישירות בדפדפן (לחץ פעמיים).</p>
+  </div>
+
+  <!-- DONE -->
+  <div class="step" style="text-align:center;border-color:#16a34a;background:#f0fdf4">
+    <div style="font-size:48px;margin-bottom:12px">✅</div>
+    <h2 style="color:#15803d">מוכן!</h2>
+    <p style="color:#166534">
+      לאחר ההגדרה:<br><br>
+      <strong>kiosk.html</strong> — מסך הטאבלט שהעובדים לוחצים עליו<br>
+      <strong>admin.html</strong> — לוח הניהול שלך (סיסמה: taanug2024 אם לא שינית)<br><br>
+      הוסף עובדים בלשונית <strong>עובדים</strong> ואתה מוכן לעבוד.
+    </p>
+    <a href="admin.html" class="done-btn">פתח לוח ניהול →</a>
+  </div>
+
+</div>
+</body>
+</html>
