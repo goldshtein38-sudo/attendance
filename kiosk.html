@@ -443,10 +443,11 @@ function initKiosk(db) {
       const s = statusMap[emp.id] || {};
       const inside = !!s.isInside;
       const sinceStr = inside && s.since ? `⏱ מאז ${fmtTime(s.since)}` : '';
+      const avatarStyle = inside ? '' : ` style="background:${empColor(emp.id || emp.name)}"`;
       return `
         <div class="card${inside ? ' inside' : ''}"
              onclick="openModal('${emp.id}','${esc(emp.name)}')">
-          <div class="card-avatar">${emp.name[0]}</div>
+          <div class="card-avatar"${avatarStyle}>${emp.name[0]}</div>
           <div class="card-name">${emp.name}</div>
           <div class="card-status">
             <span class="dot"></span>
@@ -498,7 +499,7 @@ function initKiosk(db) {
     avatar.textContent = name[0];
     avatar.style.background = inside
       ? 'linear-gradient(135deg,#16a34a,#10b981)'
-      : 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+      : empColor(id || name);
 
     document.getElementById('m-name').textContent = name;
     document.getElementById('m-sub').textContent  = inside
@@ -618,6 +619,17 @@ function fmtTime(ts) {
 }
 
 function esc(s) { return (s||'').replace(/'/g,"\\'"); }
+
+// צבע ייחודי וקבוע לכל עובד, נגזר משם/מזהה (אותו עובד תמיד יקבל אותו צבע)
+function empColor(key) {
+  let hash = 0;
+  const str = String(key || '');
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `linear-gradient(135deg, hsl(${hue},65%,55%), hsl(${(hue + 40) % 360},65%,42%))`;
+}
 </script>
 </body>
 </html>
